@@ -1,9 +1,15 @@
 import re
+from AnalizarTokens import *
 
 
 class ArchivoCarga:
     tokens = []
     errores = []
+
+    def tokens_errores(self):
+        analyzer = CreaArchivo()
+        analyzer.analiza_datos(self.tokens, self.errores)
+
 
     def revisa_forma(self, elemento):
         formas = ["circulo", "rectangulo", "triangulo", "punto", "hexagono", "diamante"]
@@ -23,7 +29,7 @@ class ArchivoCarga:
                    "Morado", "Morado2", "Morado3", "Verde", "Verde2", "Verde3", "Blanco"]
 
         for color in colores:
-            if color.lower() == lexema:
+            if color.lower() == lexema.lower():
                 return True
             else:
                 continue
@@ -34,7 +40,7 @@ class ArchivoCarga:
         elementos.pop(elementos.index(token_esperado))
 
         for elemento in elementos:
-            if lexema == elemento:
+            if lexema.lower == elemento:
                 return True
             elif caracter == elemento:
                 return True
@@ -73,6 +79,7 @@ class ArchivoCarga:
         d_puntocoma = "Punto y Coma"
         d_valordefecto = "Por defecto"
         color_defecto = False
+        error_sintactico = False
 
         un_token = []
         un_error = []
@@ -82,9 +89,11 @@ class ArchivoCarga:
         comentario = False
 
         for linea in informacion:
-
             columna = 0
             fila += 1
+            if error_sintactico:
+                error_sintactico = False
+                break
             for caracter in linea:
 
                 columna += 1
@@ -109,12 +118,7 @@ class ArchivoCarga:
                 elif estado == 1:
                     if re.search(patron_texto, caracter):
                         lexema += caracter
-                    else:
-                        numero_error += 1
-                        un_error = [numero_error, caracter, fila, columna, d_caracterd]
-                        self.errores.append(un_error)
-
-                    if caracter == '(':
+                    elif caracter == '(':
 
                         estado = 2
                         numero_token += 1
@@ -123,50 +127,7 @@ class ArchivoCarga:
 
                         if lexema != "":
                             numero_error += 1
-                            un_error = [numero_error, caracter, fila, columna,lexema + " No es parte del lenguaje"]
-                            self.errores.append(un_error)
-                            lexema = ""
-
-
-
-                    elif self.revisa_tokens(caracter, lexema, "("):
-                        numero_error += 1
-
-                        if lexema != "":
-                            un_error = [numero_error, caracter, fila, columna, "Se esperaba '(' no " + lexema]
-                            print(estado, "Este es el estado")
-                            self.errores.append(un_error)
-                            lexema = ""
-
-                        else:
-                            un_error = [numero_error, caracter, fila, columna, "Se esperaba '(' no " + caracter]
-                            self.errores.append(un_error)
-                            lexema = ""
-
-
-
-                elif estado == 2:
-                    if caracter == "'":
-                        estado = 3
-                        numero_token += 1
-                        un_token = [numero_token, caracter, fila, columna, d_comilla]
-                        self.tokens.append(un_token)
-                        lexema = ""
-                    elif re.search(patron_texto, caracter):
-                        lexema += caracter
-
-                    elif self.revisa_tokens(caracter, lexema, "'"):
-                        numero_error += 1
-
-                        if lexema != "":
-
-                            un_error = [numero_error, lexema, fila, columna, "Se esperaba ' no " + lexema]
-                            self.errores.append(un_error)
-                            lexema = ""
-
-                        else:
-
-                            un_error = [numero_error, caracter, fila, columna, "Se esperaba ' no " + caracter]
+                            un_error = [numero_error, lexema, fila, columna, lexema + " No es parte del lenguaje"]
                             self.errores.append(un_error)
                             lexema = ""
 
@@ -174,7 +135,68 @@ class ArchivoCarga:
                         numero_error += 1
                         un_error = [numero_error, caracter, fila, columna, d_caracterd]
                         self.errores.append(un_error)
+
+
+                    if self.revisa_tokens(caracter, lexema, "("):
+                        numero_error += 1
+
+                        if lexema != "":
+                            un_error = [numero_error, caracter, fila, columna, "Se esperaba '(' no " + lexema]
+                            print(estado, "Este es el estado")
+                            self.errores.append(un_error)
+                            lexema = ""
+                            error_sintactico = True
+                            break
+
+                        else:
+                            un_error = [numero_error, caracter, fila, columna, "Se esperaba '(' no " + caracter]
+                            self.errores.append(un_error)
+                            lexema = ""
+                            error_sintactico = True
+                            break
+
+                elif estado == 2:
+
+                    if re.search(patron_texto, caracter):
+                        lexema += caracter
+
+                    elif caracter == "'":
+                        estado = 3
+                        numero_token += 1
+                        un_token = [numero_token, caracter, fila, columna, d_comilla]
+                        self.tokens.append(un_token)
+
+                        if lexema != "":
+                            numero_error += 1
+                            un_error = [numero_error, caracter, fila, columna, lexema + " No es parte del lenguaje"]
+                            self.errores.append(un_error)
+                            lexema = ""
+                    else:
+                        numero_error += 1
+                        un_error = [numero_error, caracter, fila, columna, d_caracterd]
+                        self.errores.append(un_error)
                         lexema = ""
+
+                    if self.revisa_tokens(caracter, lexema, "'"):
+                        numero_error += 1
+
+                        if lexema != "":
+
+                            un_error = [numero_error, lexema, fila, columna, "Se esperaba ' no " + lexema]
+                            self.errores.append(un_error)
+                            lexema = ""
+                            error_sintactico = True
+                            break
+
+                        else:
+
+                            un_error = [numero_error, caracter, fila, columna, "Se esperaba ' no " + caracter]
+                            self.errores.append(un_error)
+                            lexema = ""
+                            error_sintactico = True
+                            break
+
+
 
 
                 elif estado == 3:
@@ -211,23 +233,26 @@ class ArchivoCarga:
                             un_error = [numero_error, caracter, fila, columna, "Se esperaba ',' no " + lexema]
                             self.errores.append(un_error)
                             lexema = ""
+                            error_sintactico = True
+                            break
 
                         else:
 
                             un_error = [numero_error, caracter, fila, columna, "Se esperaba ',' no " + caracter]
                             self.errores.append(un_error)
                             lexema = ""
+                            error_sintactico = True
+                            break
 
                     else:
                         un_error = [numero_error, caracter, fila, columna, d_caracterd]
                         self.errores.append(un_error)
 
-
                 elif estado == 5:
 
                     if self.revisa_forma(lexema):
                         numero_token += 1
-                        un_token = [numero_token, lexema, fila, columna, d_forma]
+                        un_token = [numero_token, lexema.lower(), fila, columna, d_forma]
                         self.tokens.append(un_token)
 
                         lexema = ""
@@ -247,19 +272,14 @@ class ArchivoCarga:
                             un_error = [numero_error, lexema, fila, columna, "Se esperaba una forma, no: " + lexema]
                             self.errores.append(un_error)
                             lexema = ""
+                            error_sintactico = True
+                            break
 
 
                     else:
                         numero_error += 1
                         un_error = [numero_error, caracter, fila, columna, d_caracterd]
                         self.errores.append(un_error)
-
-
-
-
-
-
-
 
                 elif estado == 6:
 
@@ -273,6 +293,8 @@ class ArchivoCarga:
                                             "Se esperaba una caracter booleano, no: " + lexema]
                                 self.errores.append(un_error)
                                 lexema = ""
+                                error_sintactico = True
+                                break
 
                             else:
                                 numero_error += 1
@@ -304,11 +326,15 @@ class ArchivoCarga:
                             un_error = [numero_error, caracter, fila, columna, "Se esperaba ')' no " + lexema]
                             self.errores.append(un_error)
                             lexema = ""
+                            error_sintactico = True
+                            break
 
                         else:
                             un_error = [numero_error, caracter, fila, columna, "Se esperaba ')' no " + caracter]
                             self.errores.append(un_error)
                             lexema = ""
+                            error_sintactico = True
+                            break
                     else:
                         numero_error += 1
                         un_error = [numero_error, caracter, fila, columna, d_caracterd]
@@ -334,11 +360,15 @@ class ArchivoCarga:
                             un_error = [numero_error, caracter, fila, columna, "Se esperaba '{' no " + lexema]
                             self.errores.append(un_error)
                             lexema = ""
+                            error_sintactico = True
+                            break
 
                         else:
                             un_error = [numero_error, caracter, fila, columna, "Se esperaba '{' no " + caracter]
                             self.errores.append(un_error)
                             lexema = ""
+                            error_sintactico = True
+                            break
 
                     else:
                         numero_error += 1
@@ -357,13 +387,15 @@ class ArchivoCarga:
                         un_error = [numero_error, caracter, fila, columna, "Se esperaba 'nodo' no " + caracter]
                         self.errores.append(un_error)
                         lexema = ""
+                        error_sintactico = True
+                        break
 
                     else:
                         numero_error += 1
                         un_error = [numero_error, caracter, fila, columna, d_caracterd]
                         self.errores.append(un_error)
 
-                    if lexema == "nodo" or lexema == "nodos":
+                    if lexema.lower() == "nodo" or lexema.lower() == "nodos":
                         estado = 10
                         numero_token += 1
                         un_token = [numero_token, lexema, fila, columna, d_nodo]
@@ -395,11 +427,15 @@ class ArchivoCarga:
                             un_error = [numero_error, caracter, fila, columna, "Se esperaba '(' no " + lexema]
                             self.errores.append(un_error)
                             lexema = ""
+                            error_sintactico = True
+                            break
 
                         else:
                             un_error = [numero_error, caracter, fila, columna, "Se esperaba '(' no " + caracter]
                             self.errores.append(un_error)
                             lexema = ""
+                            error_sintactico = True
+                            break
 
                     else:
                         numero_error += 1
@@ -450,12 +486,16 @@ class ArchivoCarga:
                             un_error = [numero_error, caracter, fila, columna, "Se esperaba ' no " + lexema]
                             self.errores.append(un_error)
                             lexema = ""
+                            error_sintactico = True
+                            break
 
                         else:
 
                             un_error = [numero_error, caracter, fila, columna, "Se esperaba ' no " + caracter]
                             self.errores.append(un_error)
                             lexema = ""
+                            error_sintactico = True
+                            break
 
 
 
@@ -478,12 +518,16 @@ class ArchivoCarga:
                             un_error = [numero_error, caracter, fila, columna, "Se esperaba ',' no " + lexema]
                             self.errores.append(un_error)
                             lexema = ""
+                            error_sintactico = True
+                            break
 
                         else:
 
                             un_error = [numero_error, caracter, fila, columna, "Se esperaba ',' no " + caracter]
                             self.errores.append(un_error)
                             lexema = ""
+                            error_sintactico = True
+                            break
 
                     else:
                         numero_error += 1
@@ -511,12 +555,16 @@ class ArchivoCarga:
                             un_error = [numero_error, lexema, fila, columna, "Se esperaba ' no " + lexema]
                             self.errores.append(un_error)
                             lexema = ""
+                            error_sintactico = True
+                            break
 
                         else:
 
                             un_error = [numero_error, caracter, fila, columna, "Se esperaba ' no " + caracter]
                             self.errores.append(un_error)
                             lexema = ""
+                            error_sintactico = True
+                            break
 
                     else:
                         numero_error += 1
@@ -554,11 +602,15 @@ class ArchivoCarga:
                             un_error = [numero_error, caracter, fila, columna, "Se esperaba ')' no " + lexema]
                             self.errores.append(un_error)
                             lexema = ""
+                            error_sintactico = True
+                            break
 
                         else:
                             un_error = [numero_error, caracter, fila, columna, "Se esperaba ')' no " + caracter]
                             self.errores.append(un_error)
                             lexema = ""
+                            error_sintactico = True
+                            break
                     else:
                         numero_error += 1
                         un_error = [numero_error, caracter, fila, columna, d_caracterd]
@@ -578,11 +630,15 @@ class ArchivoCarga:
                             un_error = [numero_error, caracter, fila, columna, "Se esperaba ';' no " + lexema]
                             self.errores.append(un_error)
                             lexema = ""
+                            error_sintactico = True
+                            break
 
                         else:
                             un_error = [numero_error, caracter, fila, columna, "Se esperaba ';' no " + caracter]
                             self.errores.append(un_error)
                             lexema = ""
+                            error_sintactico = True
+                            break
                     elif caracter == "#":
 
                         numero_token += 1
@@ -605,7 +661,6 @@ class ArchivoCarga:
                             self.tokens.append(un_token)
 
                         elif color_defecto:
-
                             numero_token += 1
                             un_token = [numero_token, caracter, fila, columna, d_puntocoma]
                             self.tokens.append(un_token)
@@ -617,6 +672,8 @@ class ArchivoCarga:
                             un_error = [numero_error, lexema, fila, columna, "Se esperaba un color no " + lexema]
                             self.errores.append(un_error)
                             lexema = ""
+                            error_sintactico = True
+                            break
                     else:
                         numero_error += 1
                         un_error = [numero_error, caracter, fila, columna, d_caracterd]
@@ -664,11 +721,15 @@ class ArchivoCarga:
                             un_error = [numero_error, caracter, fila, columna, "Se esperaba '}' no " + lexema]
                             self.errores.append(un_error)
                             lexema = ""
+                            error_sintactico = True
+                            break
 
                         else:
                             un_error = [numero_error, caracter, fila, columna, "Se esperaba '}' no " + caracter]
                             self.errores.append(un_error)
                             lexema = ""
+                            error_sintactico = True
+                            break
                     elif cond_comen == 2:
                         cond_comen = 0
                         break
@@ -706,11 +767,15 @@ class ArchivoCarga:
                             un_error = [numero_error, caracter, fila, columna, "Se esperaba 'defecto' no " + lexema]
                             self.errores.append(un_error)
                             lexema = ""
+                            error_sintactico = True
+                            break
 
                         else:
                             un_error = [numero_error, caracter, fila, columna, "Se esperaba 'defecto' no " + caracter]
                             self.errores.append(un_error)
                             lexema = ""
+                            error_sintactico = True
+                            break
                     elif cond_comen == 2:
                         cond_comen = 0
                         break
@@ -733,11 +798,15 @@ class ArchivoCarga:
                             un_error = [numero_error, caracter, fila, columna, "Se esperaba '(' no " + lexema]
                             self.errores.append(un_error)
                             lexema = ""
+                            error_sintactico = True
+                            break
 
                         else:
                             un_error = [numero_error, caracter, fila, columna, "Se esperaba '(' no " + caracter]
                             self.errores.append(un_error)
                             lexema = ""
+                            error_sintactico = True
+                            break
 
                     else:
                         un_error = [numero_error, caracter, fila, columna, d_caracterd]
@@ -762,12 +831,16 @@ class ArchivoCarga:
                             un_error = [numero_error, lexema, fila, columna, "Se esperaba ' no " + lexema]
                             self.errores.append(un_error)
                             lexema = ""
+                            error_sintactico = True
+                            break
 
                         else:
 
                             un_error = [numero_error, caracter, fila, columna, "Se esperaba ' no " + caracter]
                             self.errores.append(un_error)
                             lexema = ""
+                            error_sintactico = True
+                            break
 
                     else:
                         numero_error += 1
@@ -809,11 +882,15 @@ class ArchivoCarga:
                             un_error = [numero_error, caracter, fila, columna, "Se esperaba ')' no " + lexema]
                             self.errores.append(un_error)
                             lexema = ""
+                            error_sintactico = True
+                            break
 
                         else:
                             un_error = [numero_error, caracter, fila, columna, "Se esperaba ')' no " + caracter]
                             self.errores.append(un_error)
                             lexema = ""
+                            error_sintactico = True
+                            break
                     else:
                         numero_error += 1
                         un_error = [numero_error, caracter, fila, columna, d_caracterd]
@@ -832,11 +909,15 @@ class ArchivoCarga:
                             un_error = [numero_error, caracter, fila, columna, "Se esperaba ';' no " + lexema]
                             self.errores.append(un_error)
                             lexema = ""
+                            error_sintactico = True
+                            break
 
                         else:
                             un_error = [numero_error, caracter, fila, columna, "Se esperaba ';' no " + caracter]
                             self.errores.append(un_error)
                             lexema = ""
+                            error_sintactico = True
+                            break
 
                     elif caracter == ";":
                         estado = 17
@@ -857,6 +938,8 @@ class ArchivoCarga:
                             un_error = [numero_error, lexema, fila, columna, "Se esperaba un color no " + lexema]
                             self.errores.append(un_error)
                             lexema = ""
+                            error_sintactico = True
+                            break
                     else:
                         numero_error += 1
                         un_error = [numero_error, caracter, fila, columna, d_caracterd]
@@ -864,7 +947,9 @@ class ArchivoCarga:
         print(self.tokens)
         for token in self.tokens:
             print(token[1])
-        print(self.errores)
+
+
+
 
     def analisis(self, todainformacion):
         patron_texto = r"[a-zA-z]"

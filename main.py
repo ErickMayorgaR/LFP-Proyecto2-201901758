@@ -3,7 +3,7 @@ from tkinter import *
 from CargarArchivo import *
 
 
-#ir_seleccion = ArchivoCarga()
+ir_seleccion = ArchivoCarga()
 
 
 def cargar_archivo():
@@ -20,8 +20,9 @@ def cargar_archivo():
     ir_seleccion.analisis(info)
 
 def generar_graficas():
+    ir_seleccion.tokens_errores()
     print("algo")
-    #ir_seleccion.mejorRuta()
+
 
 
 def salir():
