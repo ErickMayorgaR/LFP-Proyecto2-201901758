@@ -1,0 +1,38 @@
+<form action="index.html" method="post">
+  
+    <h1>Inicio de sesión</h1>
+    
+    <fieldset>
+      
+      <input type="text" placeholder="Registro académico" id="carnet" name="carnet" required [(ngModel)]="usuario.carnet" >
+      
+      
+      <input type="password" placeholder="Contraseña" id="contraseña" name="contraseña" required [(ngModel)]="usuario.password">
+      
+    </fieldset>
+      
+    <button type="submit" class="btn" (click)="login()">Iniciar Sesión</button>
+    <button type="button" class="btn" (click)="openSM(contenido)">Olvidé mi contraseña</button>
+  </form>
+
+  <div class="caja">
+    <a routerLink="/registro" class="link">¿Aún no tienes cuenta?</a>  
+  </div>
+
+  <ng-template #contenido let-login>
+    <div class="modal-header">
+      <h4 class="modal-title">Recuperar contraseña</h4>
+      <button  aria-label="close" class="equis" class="close" type="button" (click) = "login.dismiss()" >
+        X
+      </button>
+    </div>
+    <div class="modal-body">
+      <input type="password"  placeholder="Contraseña antigua" name="contraseñaAntigua">
+      <input type="password"  placeholder="Contraseña nueva" name="contraseñaNueva">
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-success" (click)="login.close()">Cambiar contraseña</button>
+    </div>
+  </ng-template>
+
+  
